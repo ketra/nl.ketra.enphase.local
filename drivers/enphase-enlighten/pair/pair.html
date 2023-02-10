@@ -1,0 +1,106 @@
+<style type="text/css">
+    .form-wrapper {
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .input-field {
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .submit-button {
+        margin-top: 20px;
+        background-color: #00c139 !important;
+        color: white !important;
+        width: 100%;
+    }
+
+    .help {
+        margin-top: auto;
+    }
+</style>
+
+<base target="_parent" />
+<div class="form-wrapper">
+    <p>Please enter your Enlighten username, password, serial and hostname:</p>
+
+    <div class="input-field">
+        <label for="sn">Hostname</label>
+        <input
+                type="text"
+                id="hostname"
+                placeholder="192.168.2.22"
+                value=""
+        />
+    </div>
+    <div class="input-field">
+        <label for="sn">Username</label>
+        <input
+                type="text"
+                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
+                id="username"
+                placeholder="test@test.nl"
+                value=""
+        />
+    </div>
+    <div class="input-field">
+        <label for="sn">Password</label>
+        <input
+                type="password"
+                id="password"
+                value=""
+        />
+    </div>
+
+    <div class="input-field">
+        <label for="sn">Serial</label>
+        <input
+                type="text"
+                pattern="[0-9]{10}"
+                id="serial"
+                placeholder=""
+                value=""
+        />
+    </div>
+
+    <button class="submit-button" id="validate">Connect</button>
+
+</div>
+
+<script type="application/javascript">
+  $(() => {
+    $("#validate").click(() => {
+      Homey.showLoadingOverlay();
+
+      var hostname = $('#hostname').val();
+      var username = $('#username').val();
+      var password = $("#password").val();
+      var serial = $("#serial").val();
+
+      Homey.emit("login", { hostname: hostname, username: username, password: password, serial: serial })
+        .then(() => {
+          Homey.emit("Done", { hostname: hostname, username: username, password: password, serial: serial }).then(() =>
+          {
+            Homey.createDevice({
+              name: 'Enlighten Envoy',
+              data: {
+                id: serial
+              }
+          })
+          }).then(function(result) {
+            Homey.done();
+            });
+        })
+        .catch((error) => {
+          Homey.hideLoadingOverlay();
+          Homey.alert(error.message);
+        });
+    });
+  });
+</script>

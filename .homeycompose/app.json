@@ -1,0 +1,28 @@
+{
+  "id": "nl.ketra.enphase.local",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Enphase enlighten local"
+  },
+  "description": {
+    "en": "Adds local support for the enphase enlighten gateway (V7 firmware)"
+  },
+  "category": [
+    "energy"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "kevin traa",
+    "email": "ketra90@gmail.com"
+  }
+}
