@@ -15,7 +15,6 @@ class EnphaseDriver extends Homey.Driver {
 
   async onPair(session: PairSession) {
     session.setHandler('login', async (data) => {
-      this.log(`Received Login ${data.username} ${data.password} ${data.serial}`);
       return EnlightenApi.TestCredentials(data.username, data.password, data.serial);
     });
     session.setHandler('Done', async (data) => {
