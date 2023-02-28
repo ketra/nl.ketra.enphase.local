@@ -58,6 +58,8 @@ export default class EnlightenApi {
           rejectUnauthorized: false,
         }),
       });
+      this.CollectToken().then();
+
       // Set that 401 is not a breaking error.
       this.client.interceptors.response.use((response: any) => {
         return response;
@@ -102,14 +104,17 @@ export default class EnlightenApi {
       });
     }
 
-    async GetCookie() {
-      if (this.client.defaults.headers.common['Authorization']) {
+    async CheckCookie() {
+      return new Promise<void>((resolve, reject) => {
         this.client.get('auth/check_jwt').then((result: any) => {
-          this.client.defaults.headers.common['Cookie'] = result.headers['set-cookie'][0];
+          if (result.headers['set-cookie']) {
+            this.client.defaults.headers.common['Cookie'] = result.headers['set-cookie'][0];
+          } else {
+            this.client.defaults.headers.common['Cookie'] = result.config.headers['Cookie'];
+          }
+          resolve();
         });
-      } else {
-        this.CollectToken().then(this.GetCookie);
-      }
+      });
     }
 
     static parseJwt(token: any) {
@@ -139,11 +144,13 @@ export default class EnlightenApi {
 
     GetData() {
       return new Promise((resolve, reject) => {
-        this.checkLogin().then(() => {
-          this.client.get('api/v1/production').then((data: { data: object; }) => {
-            resolve(data.data);
-          }).catch((err: any) => {
-            reject(err);
+        this.CheckCookie().then(() => {
+          this.checkLogin().then(() => {
+            this.client.get('production.json').then((data: { data: object; }) => {
+              resolve(data.data);
+            }).catch((err: any) => {
+              reject(err);
+            });
           });
         });
       });
