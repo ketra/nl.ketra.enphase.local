@@ -3,7 +3,7 @@ import EnlightenApi from './api';
 
 class EnphaseDevice extends Homey.Device {
 
-  private interval: number = 1000 * 30
+  private interval: number = 1000 * 10
   api: EnlightenApi | undefined;
 
   /**
@@ -23,8 +23,10 @@ class EnphaseDevice extends Homey.Device {
 
   CollectData() {
     this.api?.GetData().then((data: any) => {
-      this.setCapabilityValue('meter_power', data.wattHoursLifetime/ 1000).then();
-      this.setCapabilityValue('measure_power', data.wattsNow).then();
+      const collectDate = new Date(data.production[0].readingTime * 1000).toISOString()
+      this.log(`data from ${collectDate} -  power_meter" ${data.production[0].whLifetime}, power: ${data.production[0].wNow}`);
+      this.setCapabilityValue('meter_power', data.production[0].whLifetime).then();
+      this.setCapabilityValue('measure_power', data.production[0].wNow).then();
     }).catch((r: any) => {
     });
   }
