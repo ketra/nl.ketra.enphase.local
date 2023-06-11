@@ -34,7 +34,9 @@
       "class": "solarpanel",
       "capabilities": [
         "measure_power",
-        "meter_power"
+        "meter_power",
+        "meter_power.today",
+        "meter_power.7days"
       ],
       "connectivity": [
         "lan"
@@ -42,11 +44,75 @@
       "platforms": [
         "local"
       ],
+      "discovery": "enphase-enlighten",
       "pair": [
         {
-          "id": "pair"
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "login"
+          },
+          "options": {
+            "singular": true
+          }
+        },
+        {
+          "id": "login",
+          "template": "login_credentials",
+          "navigation": {
+            "next": "Add_device"
+          }
+        },
+        {
+          "id": "Add_device"
+        },
+        {
+          "id": "loading",
+          "template": "loading"
         }
       ],
+      "capabilitiesOptions": {
+        "meter_power": {
+          "title": {
+            "en": "Energy yield Lifetime",
+            "nl": "Energieopbrengst Levensduur"
+          },
+          "description": {
+            "en": "The total energy yield of the solar panel system since it was installed.",
+            "nl": "De totale energieopbrengst van het zonnepaneelsysteem sinds de installatie."
+          }
+        },
+        "meter_power.today": {
+          "title": {
+            "en": "Energy yield Today",
+            "nl": "Energieopbrengst Vandaag"
+          },
+          "description": {
+            "en": "The total energy yield of the solar panel system today.",
+            "nl": "De totale energieopbrengst van het zonnepaneelsysteem vandaag."
+          }
+        },
+        "meter_power.7days": {
+          "title": {
+            "en": "Energy yield Last 7 Days",
+            "nl": "Energieopbrengst Laatste 7 Dagen"
+          },
+          "description": {
+            "en": "The total energy yield of the solar panel system in the last 7 days.",
+            "nl": "De totale energieopbrengst van het zonnepaneelsysteem in de laatste 7 dagen."
+          }
+        },
+        "measure_power": {
+          "title": {
+            "en": "Current Power",
+            "nl": "Huidig Vermogen"
+          },
+          "description": {
+            "en": "The current power of the solar panel system.",
+            "nl": "Het huidige vermogen van het zonnepaneelsysteem."
+          }
+        }
+      },
       "images": {
         "small": "/drivers/enphase-enlighten/assets/images/small.png",
         "large": "/drivers/enphase-enlighten/assets/images/large.png",
@@ -54,5 +120,15 @@
       },
       "id": "enphase-enlighten"
     }
-  ]
+  ],
+  "discovery": {
+    "enphase-enlighten": {
+      "type": "mdns-sd",
+      "mdns-sd": {
+        "name": "enphase-envoy",
+        "protocol": "tcp"
+      },
+      "id": "{{txt.serialnum}}"
+    }
+  }
 }
