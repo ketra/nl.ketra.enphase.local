@@ -1,6 +1,7 @@
 // eslint-disable-next-line strict,node/no-unsupported-features/es-syntax
 import https from 'node:https';
 import axios, { AxiosResponse } from 'axios';
+import { EnlightenApiCredentials} from "./types";
 
 const ENLIGHTEN_AUTH_JSON_URL = 'https://enlighten.enphaseenergy.com/login/login.json?';
 const TOKEN_URL = 'https://entrez.enphaseenergy.com/tokens';
@@ -22,27 +23,27 @@ export default class EnlightenApi {
       this.hostname = hostname;
     }
 
-    static async createApi(username: string, password: string, serial: string, hostname: string) {
-      const api = new EnlightenApi(username, password, serial, hostname);
+    static async createApi(apiCredentials: EnlightenApiCredentials, hostname: string) {
+      const api = new EnlightenApi(apiCredentials.username, apiCredentials.password, apiCredentials.serial, hostname);
       await api.CreateClient();
       return api;
     }
 
-    static async TestCredentials(username: string, password: string, serial: string) {
-      const loginPayload = { 'user[email]': username, 'user[password]': password };
+    static async TestCredentials(apiCredentials: EnlightenApiCredentials) {
+      const loginPayload = { 'user[email]': apiCredentials.username, 'user[password]': apiCredentials.password };
       let options = {
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       };
       const res = await axios.post(ENLIGHTEN_AUTH_JSON_URL, loginPayload, options);
       const { session_id } = res.data;
-      const tokenPayload = { session_id, serial_num: serial, username };
+      const tokenPayload = { session_id, serial_num: apiCredentials.serial, username: apiCredentials.username };
       options = {
         headers: { 'content-type': 'application/json' },
       };
       const response = await axios.post(TOKEN_URL, tokenPayload, options);
       const token = <string>response.data.trim('\n');
       const parsedToken = this.parseJwt(token);
-      return parsedToken.username === username;
+      return parsedToken.username === apiCredentials.username;
     }
 
     private async CreateClient() {
@@ -58,6 +59,8 @@ export default class EnlightenApi {
           rejectUnauthorized: false,
         }),
       });
+      this.CollectToken().then();
+
       // Set that 401 is not a breaking error.
       this.client.interceptors.response.use((response: any) => {
         return response;
@@ -102,14 +105,17 @@ export default class EnlightenApi {
       });
     }
 
-    async GetCookie() {
-      if (this.client.defaults.headers.common['Authorization']) {
+    async CheckCookie() {
+      return new Promise<void>((resolve, reject) => {
         this.client.get('auth/check_jwt').then((result: any) => {
-          this.client.defaults.headers.common['Cookie'] = result.headers['set-cookie'][0];
+          if (result.headers['set-cookie']) {
+            this.client.defaults.headers.common['Cookie'] = result.headers['set-cookie'][0];
+          } else {
+            this.client.defaults.headers.common['Cookie'] = result.config.headers['Cookie'];
+          }
+          resolve();
         });
-      } else {
-        this.CollectToken().then(this.GetCookie);
-      }
+      });
     }
 
     static parseJwt(token: any) {
@@ -139,11 +145,13 @@ export default class EnlightenApi {
 
     GetData() {
       return new Promise((resolve, reject) => {
-        this.checkLogin().then(() => {
-          this.client.get('api/v1/production').then((data: { data: object; }) => {
-            resolve(data.data);
-          }).catch((err: any) => {
-            reject(err);
+        this.CheckCookie().then(() => {
+          this.checkLogin().then(() => {
+            this.client.get('production.json').then((data: { data: object; }) => {
+              resolve(data.data);
+            }).catch((err: any) => {
+              reject(err);
+            });
           });
         });
       });
