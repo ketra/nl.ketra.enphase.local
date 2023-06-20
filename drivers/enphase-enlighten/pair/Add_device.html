@@ -1,8 +1,16 @@
 <script type="application/javascript">
   $(() => {
+    Homey.showLoadingOverlay();
     Homey.emit('getdata', {});
     Homey.on('data', (data) => {
-      Homey.createDevice(data);
+      if (data != null) {
+        Homey.createDevice(data).then(function(result) {
+          Homey.done();
+        })
+      }
+      else {
+        Homey.alert("No data received from Envoy. Please check your credentials and try again.");
+      }
     });
   });
 </script>
